@@ -1,10 +1,19 @@
 @font-face {
-  font-family: Questrial;
-  src: url(Questrial-Regular.ttf);
+    font-family: 'Questrial';
+    src: url('Questrial-Regular.woff2') format('woff2'),
+        url('Questrial-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
 }
+
 @font-face {
-  font-family: Cabin;
-  src: url(Cabin-Regular.ttf);
+    font-family: 'Cabin';
+    src: url('Cabin-Regular.woff2') format('woff2'),
+        url('Cabin-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
 }
 
 body {

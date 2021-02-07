@@ -1,0 +1,9 @@
+head
+  link(rel="stylesheet" href="style.css")
+body
+  div(id="videoContainer")
+    video(controls id="video")
+      source(src=format.url type="video/webm")
+    p(id="title") #{info.videoDetails.title}
+    if (query.desc)
+      p(id="desc") #{info.videoDetails.description}

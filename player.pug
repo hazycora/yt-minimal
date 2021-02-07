@@ -1,9 +1,15 @@
 head
+  meta(charset="UTF-8")
   link(rel="stylesheet" href="static/style.css")
+  title #{info.videoDetails.title} - Minimal YouTube Player
+  meta(name="viewport" content="width=device-width, user-scalable=no")
 body
+  script.
+    0
   div(id="videoContainer")
-    video(controls id="video")
-      source(src=format.url type="video/webm")
+    if video
+      video(controls id="video" poster=info.videoDetails.thumbnails[info.videoDetails.thumbnails.length-1].url)
+        source(src=format.url type="video/webm")
     p(id="title") #{info.videoDetails.title}
     if (query.desc)
-      p(id="desc") #{info.videoDetails.description}
+      p(id="desc") !{description}

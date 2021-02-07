@@ -1,6 +1,6 @@
 {
   "name": "yt-minimal",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Minimal YouTube player.",
   "main": "index.js",
   "scripts": {

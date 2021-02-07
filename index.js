@@ -1,13 +1,20 @@
-const http = require("http")
-const host = 'localhost'
-const port = 3002
+const http = require('http')
+const url = require('url')
+const ytdl = require('ytdl-core')
 
-const requestListener = function (req, res) {
-    res.writeHead(200)
-    res.end("Site initialized!")
-}
+http.createServer(function (req, res) {
+  const queryObject = url.parse(req.url,true).query
+  console.log("Request for: \n"+JSON.stringify(queryObject, null, 2))
 
-const server = http.createServer(requestListener);
-server.listen(port, host, () => {
-    console.log(`Server is running on http://${host}:${port}`)
-})
+  if(queryObject.v==undefined) {
+    res.writeHead(200, {'Content-Type': 'text/html'})
+    res.end('UNFINISHED!!')
+  }else{
+    ytdl.getInfo(queryObject.v).then(info => {
+      const json = JSON.stringify(info, null, 2)
+      console.log(json)
+      res.writeHead(200, {'Content-Type': 'text/html'})
+      res.end(info.videoDetails.title)
+    })
+  }
+}).listen(3002)

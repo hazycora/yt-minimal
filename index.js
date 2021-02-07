@@ -5,8 +5,8 @@ const fs = require('fs')
 const pug = require('pug')
 
 http.createServer(function (req, res) {
-  if(req.url=="/style.css"||req.url=="/style.css/") {
-    fs.readFile(__dirname+"/style.css", function (err,data) {
+  if(req.url.startsWith("/static/")) {
+    fs.readFile(__dirname+req.url, function (err,data) {
       if (err) {
         res.writeHead(404)
         res.end(JSON.stringify(err))
@@ -14,6 +14,7 @@ http.createServer(function (req, res) {
       }
       res.writeHead(200)
       res.end(data)
+      return
     });
   }else {
     const queryObject = url.parse(req.url,true).query

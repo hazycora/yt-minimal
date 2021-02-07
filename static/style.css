@@ -26,7 +26,7 @@ body {
   width: calc(100% - 40px);
 }
 #linkInput {
-  width: calc(100% - 110px);
+  width: calc(100% - 120px);
   margin-right: 10px;
   height: 40px;
   border-radius: 10px;

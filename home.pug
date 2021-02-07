@@ -4,8 +4,6 @@ head
   title Minimal YouTube Player
   meta(name="viewport" content="width=device-width, user-scalable=no")
 body
-  script.
-    0
   p(id="siteTitle") Minimal YouTube Player
   div(id="inputs")
     input(id="linkInput" onkeydown="onKey()" placeholder="Paste a YouTube link!")
@@ -14,10 +12,24 @@ body
     function onKey() {
       let ele = document.getElementById('linkInput');
       if(event.key === 'Enter') {
-        window.location.href = "/?v="+ele.value
+        let goTo = "/?v="+ele.value
+        if (ele.value.startsWith("https://youtu.be/")) {
+          goTo = "/?v="+ele.value.substring(17)
+        }
+        if (ele.value.startsWith("https://www.youtube.com/watch?v=")) {
+          goTo = "/?v="+ele.value.substring(32)
+        }
+        window.location.href = goTo
       }
     }
     function search() {
       let ele = document.getElementById('linkInput');
-      window.location.href = "/?v="+ele.value
+      let goTo = "/?v="+ele.value
+      if (ele.value.startsWith("https://youtu.be/")) {
+        goTo = "/?v="+ele.value.substring(17)
+      }
+      if (ele.value.startsWith("https://www.youtube.com/watch?v=")) {
+        goTo = "/?v="+ele.value.substring(32)
+      }
+      window.location.href = goTo
     }

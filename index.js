@@ -2,9 +2,8 @@ const http = require('http')
 const url = require('url')
 const ytdl = require('ytdl-core')
 const fs = require('fs')
-const pug = require('pug')
 var stream = ytdl(url);
-let httpPort = 3002;
+let httpPort = 3002
 console.log("==============================")
 console.log("Minimalist YouTube Player")
 console.log("Made by HazyCora")
@@ -24,8 +23,7 @@ http.createServer(function (req, res) {
   }else {
     if(queryObject.v==undefined) {
       res.writeHead(200, {'Content-Type': 'text/html'})
-      let html = pug.renderFile('home.pug', {})
-      res.end(html)
+      res.end(writeHome())
       return
     }else{
       let id
@@ -35,49 +33,42 @@ http.createServer(function (req, res) {
         if (ytdl.validateURL(queryObject.v)) {
           id = ytdl.getURLVideoID(queryObject.v);
         } else {
-          var d = JSON.stringify({
-            "err": "invalidData"
-          })
-          res.writeHead(404, {
-            "Access-Control-Allow-Origin": "*",
-            "Content-Type": 'text/html'
-          });
-          let html = pug.renderFile('player.pug', {
-            video: false,
-            info: {videoDetails: {title: "This video is not available."}},
-            description: "For some reason, this video is not available.",
-            query: queryObject
-          })
-          res.end(html);
-          return;
+          if (queryObject.v.startsWith("https://youtu.be/")) {
+            id = queryObject.v.substring(17)
+          } else {
+            var d = JSON.stringify({
+              "err": "invalidData"
+            })
+            res.writeHead(404, {
+              "Access-Control-Allow-Origin": "*",
+              "Content-Type": 'text/html'
+            });
+            let html = writeViewer({
+              video: false,
+              info: {videoDetails: {title: "This video is not available."}},
+              description: "For some reason, this video is not available.",
+              query: queryObject
+            })
+            res.end(html);
+            return;
+          }
         }
       }
       ytdl.getInfo(id).then(info => {
         const json = JSON.stringify(info, null, 2)
         let format = ytdl.chooseFormat(info.formats, {})
         res.writeHead(200, {'Content-Type': 'text/html'})
-        let html = pug.renderFile('player.pug', {
+        console.log("TEST")
+        let obj = {
           video: true,
           format: format,
           info: info,
           description: wrapURLs(info.videoDetails.description),
           query: queryObject
-        })
-        res.end(html)
-        return
-      }).catch(function (err) {
-        res.writeHead(404, {
-          "Access-Control-Allow-Origin": "*",
-          "Content-Type": 'text/html'
-        });
-        let html = pug.renderFile('player.pug', {
-          video: false,
-          info: {videoDetails: {title: "This video is not available."}},
-          description: "For some reason, this video is not available.",
-          query: queryObject
-        })
-        res.end(html);
-      });
+        }
+        let html = writeViewer(obj)
+        return res.end(html)
+      })
     }
   }
 }).listen(httpPort)
@@ -97,4 +88,70 @@ function wrapURLs(text, new_window) {
     var href = protocol_pattern.test(url) ? url : 'http://' + url
     return '<a href="' + href + '" target="' + target + '">' + url + '</a>'
   })
+}
+function writeViewer(data) {
+  console.log(JSON.stringify(data, null, 2))
+  let html = `
+  <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="static/style.css">
+    <title>${data.info.videoDetails.title} - Minimal YouTube Player</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+  </head>
+  <body>
+    <div id="videoContainer">`
+  if (data.video) {
+    html += `<video controls id="video" poster=${data.info.videoDetails.thumbnails[data.info.videoDetails.thumbnails.length-1].url}>`
+    data.info.formats.forEach(function(item, i) {
+      html += `<source src=${data.info.formats[i].url} type=${data.info.formats[i].mimeType}>`
+    })
+    html += `</video>`
+  }
+  html += `<p id="title">${data.info.videoDetails.title}</p>`
+  html += `<p id="desc">${data.description}</p>`
+  console.log(html)
+  return html
+}
+function writeHome(data) {
+  let html = `
+  <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="static/style.css">
+    <title>Minimal YouTube Player</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+  </head>
+  <body>
+    <p id="siteTitle">Minimal YouTube Player</p>
+    <div id="inputs">
+      <input id="linkInput" onkeydown="onKey()" placeholder="Paste a YouTube link!" />
+      <button type="button" onclick="search()" id="buttonInput">Search</button>
+    </div>
+    <script>
+      function onKey() {
+        let ele = document.getElementById('linkInput');
+        if(event.key === 'Enter') {
+          let goTo = "/?v="+ele.value
+          if (ele.value.startsWith("https://youtu.be/")) {
+            goTo = "/?v="+ele.value.substring(17)
+          }
+          if (ele.value.startsWith("https://www.youtube.com/watch?v=")) {
+            goTo = "/?v="+ele.value.substring(32)
+          }
+          window.location.href = goTo
+        }
+      }
+      function search() {
+        let ele = document.getElementById('linkInput');
+        let goTo = "/?v="+ele.value
+        if (ele.value.startsWith("https://youtu.be/")) {
+          goTo = "/?v="+ele.value.substring(17)
+        }
+        if (ele.value.startsWith("https://www.youtube.com/watch?v=")) {
+          goTo = "/?v="+ele.value.substring(32)
+        }
+        window.location.href = goTo
+      }
+    </script>
+  </body>`
+  return html
 }

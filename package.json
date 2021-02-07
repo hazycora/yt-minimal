@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "pug": "^3.0.0",
     "ytdl-core": "^4.4.5"
   }
 }

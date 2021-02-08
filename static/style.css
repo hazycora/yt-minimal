@@ -20,7 +20,7 @@ body {
   margin: 0px;
   background-color: rgb(215, 215, 215);
   background-image: url("/static/noise.png");
-  word-break: break-all;
+  overflow-wrap: break-word;
   font-family: Cabin;
 }
 #siteTitle {

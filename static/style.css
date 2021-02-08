@@ -40,6 +40,7 @@ body {
   width: calc(100% - 120px);
   margin-right: 10px;
   height: 40px;
+  padding-left: 15px;
   border-radius: 10px;
   border: 1px solid transparent;
 }
@@ -47,6 +48,7 @@ body {
   width: 100px;
   height: 40px;
   border-radius: 10px;
+  background: white;
   border: 1px solid transparent;
 }
 #videoContainer {

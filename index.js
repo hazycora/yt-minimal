@@ -58,7 +58,6 @@ http.createServer(function (req, res) {
         const json = JSON.stringify(info, null, 2)
         let format = ytdl.chooseFormat(info.formats, {})
         res.writeHead(200, {'Content-Type': 'text/html'})
-        console.log("TEST")
         let obj = {
           video: true,
           format: format,
@@ -90,7 +89,6 @@ function wrapURLs(text, new_window) {
   })
 }
 function writeViewer(data) {
-  console.log(JSON.stringify(data, null, 2))
   let html = `
   <head>
     <meta charset="UTF-8">
@@ -109,7 +107,6 @@ function writeViewer(data) {
   }
   html += `<p id="title">${data.info.videoDetails.title}</p>`
   html += `<p id="desc">${data.description}</p>`
-  console.log(html)
   return html
 }
 function writeHome(data) {

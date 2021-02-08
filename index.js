@@ -3,7 +3,7 @@ const url = require('url')
 const ytdl = require('ytdl-core')
 const fs = require('fs')
 var stream = ytdl(url);
-let httpPort = 3002
+let httpPort = port = process.env.PORT || 80
 console.log("==============================")
 console.log("Minimalist YouTube Player")
 console.log("Made by HazyCora")

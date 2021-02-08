@@ -1,14 +1,38 @@
 const http = require('http')
 const url = require('url')
+const got = require('got');
 const ytdl = require('ytdl-core')
 const fs = require('fs')
 var stream = ytdl(url);
-let httpPort = port = process.env.PORT || 80
+let httpPort = port = process.env.PORT || 3002
 console.log("==============================")
 console.log("Minimalist YouTube Player")
 console.log("Made by HazyCora")
 http.createServer(function (req, res) {
   const queryObject = url.parse(req.url,true).query
+  if (req.url.startsWith("/api/proxy")) {
+   if (queryObject.url) {
+     var d = Buffer.from(queryObject.url, "base64").toString();
+     try {
+       got.stream(d).on("error", function() {
+         res.end();
+       }).on("close", function() {
+         res.end();
+       }).pipe(res);
+     } catch (error) {
+       res.end(error.message);
+     }
+   } else {
+     var d = JSON.stringify({
+       "err": "noUrl"
+     })
+     res.writeHead(404, {
+       "Access-Control-Allow-Origin": "*",
+       "Content-Type": "application/json"
+     });
+     res.end(d);
+   }
+ }else {
   if(req.url.startsWith("/static/")) {
     fs.readFile(__dirname+req.url, function (err,data) {
       if (err) {
@@ -20,7 +44,7 @@ http.createServer(function (req, res) {
       res.end(data)
       return
     });
-  }else {
+  } else {
     if(queryObject.v==undefined) {
       res.writeHead(200, {'Content-Type': 'text/html'})
       res.end(writeHome())
@@ -70,6 +94,7 @@ http.createServer(function (req, res) {
       })
     }
   }
+  }
 }).listen(httpPort)
 console.log("Listening on http://localhost:"+httpPort)
 console.log("==============================")
@@ -89,6 +114,13 @@ function wrapURLs(text, new_window) {
   })
 }
 function writeViewer(data) {
+  let s = {err: "No subtitles"}
+  if (data.info
+    .player_response.captions != undefined) {
+        s = data.info
+          .player_response.captions
+          .playerCaptionsTracklistRenderer.captionTracks
+  }
   let html = `
   <head>
     <meta charset="UTF-8">
@@ -103,6 +135,13 @@ function writeViewer(data) {
     data.info.formats.forEach(function(item, i) {
       html += `<source src=${data.info.formats[i].url} type=${data.info.formats[i].mimeType}>`
     })
+    if(Array.isArray(s)) {
+      s.forEach(function(item, i) {
+        let proxyURL = "api/proxy/?url="+Buffer.from(s[i].baseUrl+"&fmt=vtt", 'binary').toString('base64')
+        let subtitle = `<track kind="captions" srclang="${s[i].languageCode}" src ="${proxyURL}" label="${s[i].name.simpleText}">`
+        html += subtitle
+      });
+    }
     html += `</video>`
   }
   html += `<p id="title">${data.info.videoDetails.title}</p>`

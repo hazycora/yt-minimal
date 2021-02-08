@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "got": "^11.8.1",
     "ytdl-core": "^4.4.5"
   }
 }

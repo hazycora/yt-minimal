@@ -1,105 +1,69 @@
-const http = require('http')
+const express = require('express')
+const app = express()
 const url = require('url')
 const got = require('got');
 const ytdl = require('ytdl-core')
 const fs = require('fs')
 var stream = ytdl(url);
-let httpPort = port = process.env.PORT || 3002
+let httpPort = port = 25547
 console.log("==============================")
 console.log("Minimalist YouTube Player")
 console.log("Made by HazyCora")
-http.createServer(function (req, res) {
-  const queryObject = url.parse(req.url,true).query
-  if (req.url.startsWith("/api/proxy")) {
-   if (queryObject.url) {
-     var d = Buffer.from(queryObject.url, "base64").toString();
-     try {
-       got.stream(d).on("error", function() {
-         res.end();
-       }).on("close", function() {
-         res.end();
-       }).pipe(res);
-     } catch (error) {
-       res.end(error.message);
-     }
-   } else {
-     var d = JSON.stringify({
-       "err": "noUrl"
-     })
-     res.writeHead(404, {
-       "Access-Control-Allow-Origin": "*",
-       "Content-Type": "application/json"
-     });
-     res.end(d);
-   }
- }else {
-  if(req.url.startsWith("/static/")) {
-    fs.readFile(__dirname+req.url, function (err,data) {
-      if (err) {
-        res.writeHead(404)
-        res.end(JSON.stringify(err))
-        return
-      }
-      res.writeHead(200)
-      res.end(data)
-      return
-    });
-  } else {
-    if(queryObject.v==undefined) {
-      res.writeHead(200, {'Content-Type': 'text/html'})
-      res.end(writeHome())
-      return
-    }else{
-      let id
-      if (ytdl.validateID(queryObject.v)) {
-        id = queryObject.v;
-      } else {
-        if (ytdl.validateURL(queryObject.v)) {
-          id = ytdl.getURLVideoID(queryObject.v);
-        } else {
-          if (queryObject.v.startsWith("https://youtu.be/")) {
-            id = queryObject.v.substring(17)
-          } else {
-            var d = JSON.stringify({
-              "err": "invalidData"
-            })
-            res.writeHead(404, {
-              "Access-Control-Allow-Origin": "*",
-              "Content-Type": 'text/html'
-            });
-            let html = writeViewer({
-              video: false,
-              info: {videoDetails: {title: "This video is not available."}},
-              description: "For some reason, this video is not available.",
-              query: queryObject
-            })
-            res.end(html);
-            return;
-          }
-        }
-      }
-      ytdl.getInfo(id).then(info => {
-        const json = JSON.stringify(info, null, 2)
-        let format = ytdl.chooseFormat(info.formats, {})
-        res.writeHead(200, {'Content-Type': 'text/html'})
-        let obj = {
-          video: true,
-          format: format,
-          info: info,
-          description: wrapURLs(info.videoDetails.description),
-          query: queryObject
-        }
-        let html = writeViewer(obj)
-        return res.end(html)
-      })
+app.get('/api/proxy', function (req, res) {
+  if (queryObject.url) {
+    var d = Buffer.from(queryObject.url, "base64").toString();
+    try {
+      got.stream(d).on("error", function() {
+        res.send();
+      }).on("close", function() {
+        res.send();
+      }).pipe(res);
+    } catch (error) {
+      res.send(error.message);
     }
+  } else {
+    var d = JSON.stringify({
+      "err": "noUrl"
+    })
+    res.send(d);
   }
-  }
-}).listen(httpPort)
+})
+app.get('/static/:filename', function (req, res) {
+  fs.readFile(__dirname+"/static/"+req.params.filename, function (err,data) {
+    if (err) {
+      res.send(JSON.stringify(err))
+    }
+    res.send(data)
+  });
+})
+app.get('/favicon.ico', function (req, res) {
+  res.send('no lol')
+})
+app.get('/:id', function (req, res) {
+  console.log(req.params.id)
+  let id = req.params.id
+  ytdl.getInfo(id).then(info => {
+    const json = JSON.stringify(info, null, 2)
+    let obj = {
+      video: true,
+      info: info,
+      description: wrapURLs(info.videoDetails.description)
+    }
+    res.send(writeViewer(obj))
+  }).catch(err => {
+    console.log("its all fucked up oh no lol")
+    res.send(err)
+  });
+})
+app.get('/', function (req, res) {
+  const queryObject = url.parse(req.url,true).query
+  res.send(writeHome())
+})
+app.listen(httpPort)
 console.log("Listening on http://localhost:"+httpPort)
 console.log("==============================")
 stream.on('error', function(err) {
-  if(JSON.stringify(err)!="{}") {
+  if (JSON.stringify(err)!="{}") {
     console.log("WHAT?? AN ERROR????? "+JSON.stringify(err));
   }
 });
@@ -112,6 +76,49 @@ function wrapURLs(text, new_window) {
     var href = protocol_pattern.test(url) ? url : 'http://' + url
     return '<a href="' + href + '" target="' + target + '">' + url + '</a>'
   })
+}
+function writeHome(data) {
+  let html = `
+  <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="static/style.css">
+    <title>Minimal YouTube Player</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+  </head>
+  <body>
+    <p id="siteTitle">Minimal YouTube Player</p>
+    <div id="inputs">
+      <input id="linkInput" onkeydown="onKey()" placeholder="Paste a YouTube link!" />
+      <button type="button" onclick="search()" id="buttonInput">Search</button>
+    </div>
+    <script>
+      function onKey() {
+        let ele = document.getElementById('linkInput');
+        if(event.key === 'Enter') {
+          let goTo = "/"+ele.value
+          if (ele.value.startsWith("https://youtu.be/")) {
+            goTo = "/"+ele.value.substring(17)
+          }
+          if (ele.value.startsWith("https://www.youtube.com/watch?v=")) {
+            goTo = "/"+ele.value.substring(32)
+          }
+          window.location.href = goTo
+        }
+      }
+      function search() {
+        let ele = document.getElementById('linkInput');
+        let goTo = "/"+ele.value
+        if (ele.value.startsWith("https://youtu.be/")) {
+          goTo = "/"+ele.value.substring(17)
+        }
+        if (ele.value.startsWith("https://www.youtube.com/watch?v=")) {
+          goTo = "/"+ele.value.substring(32)
+        }
+        window.location.href = goTo
+      }
+    </script>
+  </body>`
+  return html
 }
 function writeViewer(data) {
   let s = {err: "No subtitles"}
@@ -144,51 +151,24 @@ function writeViewer(data) {
     }
     html += `</video>`
   }
-  html += `<p id="title">${data.info.videoDetails.title}</p>`
-  html += `<p id="desc">${data.description}</p>`
-  html += `</div>`
-  return html
-}
-function writeHome(data) {
-  let html = `
-  <head>
-    <meta charset="UTF-8">
-    <link rel="stylesheet" href="static/style.css">
-    <title>Minimal YouTube Player</title>
-    <meta name="viewport" content="width=device-width, user-scalable=no">
-  </head>
-  <body>
-    <p id="siteTitle">Minimal YouTube Player</p>
-    <div id="inputs">
-      <input id="linkInput" onkeydown="onKey()" placeholder="Paste a YouTube link!" />
-      <button type="button" onclick="search()" id="buttonInput">Search</button>
-    </div>
-    <script>
-      function onKey() {
-        let ele = document.getElementById('linkInput');
-        if(event.key === 'Enter') {
-          let goTo = "/?v="+ele.value
-          if (ele.value.startsWith("https://youtu.be/")) {
-            goTo = "/?v="+ele.value.substring(17)
-          }
-          if (ele.value.startsWith("https://www.youtube.com/watch?v=")) {
-            goTo = "/?v="+ele.value.substring(32)
-          }
-          window.location.href = goTo
-        }
-      }
-      function search() {
-        let ele = document.getElementById('linkInput');
-        let goTo = "/?v="+ele.value
-        if (ele.value.startsWith("https://youtu.be/")) {
-          goTo = "/?v="+ele.value.substring(17)
-        }
-        if (ele.value.startsWith("https://www.youtube.com/watch?v=")) {
-          goTo = "/?v="+ele.value.substring(32)
-        }
-        window.location.href = goTo
-      }
-    </script>
-  </body>`
+  html += `<p id="title">${data.info.videoDetails.title}</p>
+           <p id="desc">${data.description}</p>
+           </div>`
+
+  data.info.related_videos.forEach(function(item, i) {
+    let thumb = data.info.related_videos[i].thumbnails[data.info.related_videos[i].thumbnails.length-1].url
+    html += `
+      <a href="../pLZq3jgE6qA">
+        <div class="vidBlob">
+          <img id="thumb" src="${thumb}">
+          <div id="metadata">
+            <p id="title">${data.info.related_videos[i].title}</p>
+            <p id="author">${data.info.related_videos[i].author.name}</p>
+          </div>
+        </div>
+      </a>
+    `
+  });
+
   return html
 }

@@ -146,6 +146,7 @@ function writeViewer(data) {
   }
   html += `<p id="title">${data.info.videoDetails.title}</p>`
   html += `<p id="desc">${data.description}</p>`
+  html += `</div>`
   return html
 }
 function writeHome(data) {

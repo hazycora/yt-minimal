@@ -5,7 +5,7 @@ const got = require('got');
 const ytdl = require('ytdl-core')
 const fs = require('fs')
 var stream = ytdl(url);
-let httpPort = port = 25547
+let httpPort = port = 25550
 console.log("==============================")
 console.log("Minimalist YouTube Player")
 console.log("Made by HazyCora")
@@ -158,7 +158,7 @@ function writeViewer(data) {
   data.info.related_videos.forEach(function(item, i) {
     let thumb = data.info.related_videos[i].thumbnails[data.info.related_videos[i].thumbnails.length-1].url
     html += `
-      <a href="../pLZq3jgE6qA">
+      <a href="../pLZq3jgE6qA" class="vidBlobLink">
         <div class="vidBlob">
           <img id="thumb" src="${thumb}">
           <div id="metadata">
